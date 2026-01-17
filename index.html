@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -484,7 +484,7 @@
             
             <div class="tutorial-item">
                 <b>🔧 АДМИНИСТРАТОР:</b><br>
-                • Введите в чат: <span style="color:var(--pink)">/login 448811</span> - получить права админа<br>
+                • Введите в чат: <span style="color:var(--pink)">/login пароль</span> - получить права админа<br>
                 • Введите: <span style="color:var(--neon)">/help</span> - список всех команд<br>
                 • Доступные команды: <span style="color:var(--green)">/tp [ник], /fly, /nofly, /kill [ник], /respawn, /pos</span>
             </div>
@@ -503,7 +503,7 @@
                 <span>Движение:</span> <span class="key-hint">W A S D</span>
                 <span>Джетпак:</span> <span class="key-hint">SPACE (ЗАЖАТЬ)</span>
                 <span>Плейлист:</span> <span class="key-hint">КЛАВИША P</span>
-                <span>Бег / Админка:</span> <span class="key-hint">SHIFT / "/login 448811"</span>
+                <span>Бег / Админка:</span> <span class="key-hint">SHIFT / "/login пароль"</span>
                 <span>Чат:</span> <span class="key-hint">ENTER</span>
                 <span>Голосовой чат:</span> <span class="key-hint">ЗАЖАТЬ V</span>
                 <span>Список игроков:</span> <span class="key-hint">TAB</span>
@@ -580,8 +580,8 @@
             PLATFORM_DEPTH: 18,
             SPAWN_POSITION: { x: 0, y: 1.7, z: 0 }, // ФИКС: Высота игрока над платформой
             SPAWN_PLATFORM_POSITION: { x: 0, y: 0, z: 0 }, // ФИКС: Позиция платформы спавна
-            GENERATION_DISTANCE: 50,
-            MAX_PLATFORMS: 200
+            GENERATION_DISTANCE: 150, // УВЕЛИЧЕНО С 50 ДО 150
+            MAX_PLATFORMS: 400 // УВЕЛИЧЕНО С 200 ДО 400
         };
 
         // Игровые переменные
@@ -607,8 +607,12 @@
         let platforms = [];
         let worldGenerated = false;
         let lastGeneratedIndex = 0;
-        const PLATFORM_COUNT = 200;
+        const PLATFORM_COUNT = 400; // УВЕЛИЧЕНО С 200 ДО 400
         let particles;
+
+        // ФИКС: Переменная для защиты от быстрого нажатия пробела
+        let spacePressTime = 0;
+        const SPACE_COOLDOWN = 300; // 300 мс между прыжками
 
         // --- СИСТЕМА ПЕРЕЗАПУСКА ПРИ РЕСПАВНЕ ---
         function showRespawnModal() {
@@ -1335,7 +1339,7 @@
             }
             
             // Определяем, сколько платформ нужно сгенерировать
-            const platformsToGenerate = Math.min(targetIndex - lastGeneratedIndex, 20);
+            const platformsToGenerate = Math.min(targetIndex - lastGeneratedIndex, 40); // УВЕЛИЧЕНО С 20 ДО 40
             
             for (let i = 0; i < platformsToGenerate && (lastGeneratedIndex + i) < PLATFORM_COUNT; i++) {
                 const index = lastGeneratedIndex + i;
@@ -1365,7 +1369,7 @@
         }
 
         function cleanupDistantPlatforms(playerY) {
-            const MAX_DISTANCE = 200;
+            const MAX_DISTANCE = 300; // УВЕЛИЧЕНО С 200 ДО 300
             
             for (let i = platforms.length - 1; i >= 0; i--) {
                 const platform = platforms[i];
@@ -1389,9 +1393,9 @@
             const particleColors = new Float32Array(particleCount * 3);
             
             for (let i = 0; i < particleCount; i++) {
-                particlePositions[i * 3] = (Math.random() - 0.5) * 500;
-                particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 500 - 100;
-                particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 500 - 200;
+                particlePositions[i * 3] = (Math.random() - 0.5) * 800; // УВЕЛИЧЕНО С 500 ДО 800
+                particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 800 - 200; // УВЕЛИЧЕНО С 500 ДО 800
+                particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 800 - 400; // УВЕЛИЧЕНО С 500 ДО 800
                 
                 const color = new THREE.Color(
                     Math.random() > 0.5 ? 0x00d9ff : 0xff00ff
@@ -1487,7 +1491,16 @@
             if(e.code === 'KeyS') keys.s=1;
             if(e.code === 'KeyA') keys.a=1; 
             if(e.code === 'KeyD') keys.d=1;
-            if(e.code === 'Space') keys.space=1; 
+            
+            // ФИКС: Защита от быстрого нажатия пробела
+            if(e.code === 'Space') {
+                const now = Date.now();
+                if (now - spacePressTime > SPACE_COOLDOWN) {
+                    keys.space = 1;
+                    spacePressTime = now;
+                }
+            }
+            
             if(e.code === 'ControlLeft') keys.ctrl=1;
             if(e.shiftKey) keys.shift=1;
         });
@@ -1678,10 +1691,15 @@
                     let jumpForce = 0.32;
                     let jetForce = 0.04 * fpsMult;
 
-                    if (keys.space && jetpackFuel > 0) {
+                    // ФИКС: Защита от быстрого нажатия пробела
+                    const now = Date.now();
+                    const canUseSpace = (now - spacePressTime) > SPACE_COOLDOWN || keys.space === 1;
+                    
+                    if (keys.space && canUseSpace && jetpackFuel > 0) {
                         if (jumpCount < 2 && velY <= 0.1 && velY >= -0.1) {
                             velY = jumpForce; 
                             jumpCount++;
+                            spacePressTime = now;
                         } else {
                             velY = Math.min(velY + jetForce, 0.4); 
                             jetpackFuel = Math.max(0, jetpackFuel - 0.8 * fpsMult); 
