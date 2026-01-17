@@ -343,9 +343,4 @@ server.listen(PORT, '0.0.0.0', () => {
     console.log(`Игра: Neon&Talk | Автор: YANFUN TEAM`);
     console.log(`Конфигурация мира:`, WORLD_CONFIG);
     console.log(`Спавн: X=${WORLD_CONFIG.SPAWN_POSITION.x}, Y=${WORLD_CONFIG.SPAWN_POSITION.y}, Z=${WORLD_CONFIG.SPAWN_POSITION.z}`);
-});{
-    console.log(`Сервер запущен: http://localhost:${PORT}`);
-    console.log(`Игра: Neon&Talk | Автор: YANFUN TEAM`);
-    console.log(`Конфигурация мира:`, WORLD_CONFIG);
-    console.log(`Спавн: X=${WORLD_CONFIG.SPAWN_POSITION.x}, Y=${WORLD_CONFIG.SPAWN_POSITION.y}, Z=${WORLD_CONFIG.SPAWN_POSITION.z}`);
 });
