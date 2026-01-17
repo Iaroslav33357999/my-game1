@@ -1,4 +1,4 @@
-﻿﻿const express = require('express');
+const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
@@ -32,7 +32,7 @@ app.get('/', (req, res) => {
 });
 
 const players = {};
-const ADMIN_PASSWORD = "448811";
+const ADMIN_PASSWORD = "Iaroslav_33357999!"; // ИЗМЕНЕН ПАРОЛЬ
 
 // ФИКС: Исправлены координаты спавна
 const WORLD_CONFIG = {
@@ -41,8 +41,8 @@ const WORLD_CONFIG = {
     PLATFORM_DEPTH: 18,
     SPAWN_POSITION: { x: 0, y: 1.7, z: 0 }, // ФИКС: y=1.7 (высота игрока над платформой)
     SPAWN_PLATFORM_POSITION: { x: 0, y: 0, z: 0 }, // ФИКС: Позиция платформы спавна
-    GENERATION_DISTANCE: 50,
-    MAX_PLATFORMS: 200
+    GENERATION_DISTANCE: 150, // УВЕЛИЧЕНО С 50 ДО 150
+    MAX_PLATFORMS: 400 // УВЕЛИЧЕНО С 200 ДО 400
 };
 
 // ФИКС: Детерминированная генерация платформ
@@ -339,6 +339,11 @@ setInterval(() => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Сервер запущен: http://localhost:${PORT}`);
+    console.log(`Игра: Neon&Talk | Автор: YANFUN TEAM`);
+    console.log(`Конфигурация мира:`, WORLD_CONFIG);
+    console.log(`Спавн: X=${WORLD_CONFIG.SPAWN_POSITION.x}, Y=${WORLD_CONFIG.SPAWN_POSITION.y}, Z=${WORLD_CONFIG.SPAWN_POSITION.z}`);
+});{
     console.log(`Сервер запущен: http://localhost:${PORT}`);
     console.log(`Игра: Neon&Talk | Автор: YANFUN TEAM`);
     console.log(`Конфигурация мира:`, WORLD_CONFIG);
