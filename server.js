@@ -32,23 +32,24 @@ app.get('/', (req, res) => {
 });
 
 const players = {};
-const ADMIN_PASSWORD = "Iaroslav_33357999!"; // ИЗМЕНЕН ПАРОЛЬ
+const ADMIN_PASSWORD = "Iaroslav_33357999!";
 
-// ФИКС: Исправлены координаты спавна
+// Улучшенная конфигурация мира
 const WORLD_CONFIG = {
     PLATFORM_SPACING: 12,
     PLATFORM_WIDTH: 18,
     PLATFORM_DEPTH: 18,
-    SPAWN_POSITION: { x: 0, y: 1.7, z: 0 }, // ФИКС: y=1.7 (высота игрока над платформой)
-    SPAWN_PLATFORM_POSITION: { x: 0, y: 0, z: 0 }, // ФИКС: Позиция платформы спавна
-    GENERATION_DISTANCE: 150, // УВЕЛИЧЕНО С 50 ДО 150
-    MAX_PLATFORMS: 400 // УВЕЛИЧЕНО С 200 ДО 400
+    SPAWN_POSITION: { x: 0, y: 1.7, z: 0 },
+    SPAWN_PLATFORM_POSITION: { x: 0, y: 0, z: 0 },
+    GENERATION_DISTANCE: 150,
+    MAX_PLATFORMS: 1000, // Увеличено для бесконечной генерации
+    WORLD_HEIGHT_LIMIT: -5000 // Максимальная глубина мира
 };
 
-// ФИКС: Детерминированная генерация платформ
+// ФИКС: Детерминированная генерация платформ с движущимися элементами
 function getPlatformPosition(index, isSpawn = false) {
     if (isSpawn) {
-        return { x: 0, y: 0, z: 0 }; // ФИКС: Спавн платформа всегда на (0,0,0)
+        return { x: 0, y: 0, z: 0 };
     }
     
     const y = -index * WORLD_CONFIG.PLATFORM_SPACING;
@@ -63,16 +64,37 @@ function getPlatformPosition(index, isSpawn = false) {
     return { x, y, z };
 }
 
+// Функция для определения типа платформы на основе индекса
+function getPlatformType(index) {
+    if (index === 0) return 'spawn';
+    
+    const types = ['normal', 'moving', 'jump', 'rotating', 'narrow', 'item'];
+    const seed = index * 12345 + 67890;
+    
+    // Распределение типов платформ
+    if (index < 10) return 'normal'; // Первые 10 платформ - обычные
+    
+    const rand = (seed % 1000) / 1000;
+    
+    if (rand < 0.5) return 'normal';      // 50% - обычные
+    if (rand < 0.65) return 'moving';     // 15% - движущиеся
+    if (rand < 0.75) return 'jump';       // 10% - прыжковые
+    if (rand < 0.85) return 'rotating';   // 10% - вращающиеся
+    if (rand < 0.92) return 'narrow';     // 7% - узкие
+    return 'item';                        // 8% - с предметами
+}
+
 io.on('connection', (socket) => {
     socket.data.isAdmin = false;
     socket.data.lastAudioTime = Date.now();
     socket.data.respawnCooldown = false;
     socket.data.lastRespawnTime = 0;
+    socket.data.distanceTraveled = 0; // Дистанция от спавна
+    socket.data.startPosition = { x: 0, y: 1.7, z: 0 }; // Стартовая позиция
 
     socket.on('initPlayer', (nick) => {
         const safeNick = nick.replace(/</g, "&lt;").replace(/>/g, "&gt;").substring(0, 14);
         
-        // ФИКС: Инициализируем игрока точно на спавне
         players[socket.id] = { 
             id: socket.id, 
             nick: safeNick || "Anon", 
@@ -81,17 +103,26 @@ io.on('connection', (socket) => {
             z: WORLD_CONFIG.SPAWN_POSITION.z,
             lastAudioTime: Date.now(),
             respawnCooldown: false,
-            lastRespawnTime: 0
+            lastRespawnTime: 0,
+            distanceTraveled: 0,
+            startPosition: { ...WORLD_CONFIG.SPAWN_POSITION },
+            stats: {
+                maxStamina: 100,
+                maxFuel: 100,
+                stamina: 100,
+                fuel: 100,
+                staminaBoosts: 0,
+                fuelBoosts: 0
+            }
         };
         
-        // ФИКС: Отправляем полную конфигурацию мира
         socket.emit('worldConfig', {
             ...WORLD_CONFIG,
-            getPlatformPosition: null // Не отправляем функцию
+            getPlatformType: null
         });
         
-        // ФИКС: Сразу отправляем позицию спавна
         socket.emit('teleport', WORLD_CONFIG.SPAWN_POSITION);
+        socket.emit('playerStats', players[socket.id].stats);
         
         io.emit('currentPlayers', players);
         io.emit('receiveMessage', { 
@@ -103,9 +134,20 @@ io.on('connection', (socket) => {
 
     socket.on('move', (data) => {
         if (players[socket.id]) {
-            players[socket.id].x = data.x;
-            players[socket.id].y = data.y;
-            players[socket.id].z = data.z;
+            const player = players[socket.id];
+            
+            // Обновляем позицию
+            player.x = data.x;
+            player.y = data.y;
+            player.z = data.z;
+            
+            // Рассчитываем дистанцию от старта (по Y-координате)
+            const distance = Math.abs(player.startPosition.y - player.y);
+            player.distanceTraveled = Math.max(player.distanceTraveled, distance);
+            
+            // Отправляем обновленную дистанцию игроку
+            socket.emit('updateDistance', Math.floor(player.distanceTraveled));
+            
             socket.broadcast.emit('playerMoved', { 
                 id: socket.id, 
                 x: data.x, 
@@ -145,6 +187,35 @@ io.on('connection', (socket) => {
         }
     });
 
+    // Сбор предметов
+    socket.on('collectItem', (itemType) => {
+        const player = players[socket.id];
+        if (!player) return;
+        
+        if (itemType === 'stamina') {
+            player.stats.maxStamina = Math.min(200, player.stats.maxStamina + 25);
+            player.stats.staminaBoosts++;
+            
+            socket.emit('playerStats', player.stats);
+            socket.emit('receiveMessage', {
+                nick: 'СИСТЕМА',
+                msg: `⚡ Максимальная выносливость увеличена до ${player.stats.maxStamina}%`,
+                type: 'sys'
+            });
+            
+        } else if (itemType === 'fuel') {
+            player.stats.maxFuel = Math.min(200, player.stats.maxFuel + 25);
+            player.stats.fuelBoosts++;
+            
+            socket.emit('playerStats', player.stats);
+            socket.emit('receiveMessage', {
+                nick: 'СИСТЕМА',
+                msg: `🛢️ Максимальное топливо увеличено до ${player.stats.maxFuel}%`,
+                type: 'sys'
+            });
+        }
+    });
+
     // ФИКС: Улучшенный респавн с проверкой
     socket.on('requestRespawn', () => {
         const player = players[socket.id];
@@ -153,7 +224,6 @@ io.on('connection', (socket) => {
         const now = Date.now();
         const cooldownRemaining = 3000 - (now - player.lastRespawnTime);
         
-        // Проверка кулдауна
         if (cooldownRemaining > 0 && now - player.lastRespawnTime < 3000) {
             socket.emit('receiveMessage', { 
                 nick: 'СЕРВЕР', 
@@ -163,11 +233,10 @@ io.on('connection', (socket) => {
             return;
         }
         
-        // Устанавливаем кулдаун
         player.lastRespawnTime = now;
         player.respawnCooldown = true;
+        player.distanceTraveled = 0;
         
-        // ФИКС: Таймер для сброса кулдауна
         setTimeout(() => {
             if (players[socket.id]) {
                 players[socket.id].respawnCooldown = false;
@@ -175,14 +244,14 @@ io.on('connection', (socket) => {
             }
         }, 3000);
         
-        // ФИКС: Телепортируем точно на спавн
         player.x = WORLD_CONFIG.SPAWN_POSITION.x;
         player.y = WORLD_CONFIG.SPAWN_POSITION.y;
         player.z = WORLD_CONFIG.SPAWN_POSITION.z;
         
-        console.log(`[РЕСПАВН] Игрок ${player.nick} телепортирован на:`, WORLD_CONFIG.SPAWN_POSITION);
+        console.log(`[РЕСПАВН] Игрок ${player.nick} телепортирован на спавн`);
         
         socket.emit('teleport', WORLD_CONFIG.SPAWN_POSITION);
+        socket.emit('updateDistance', 0);
         socket.emit('receiveMessage', { 
             nick: 'СЕРВЕР', 
             msg: 'Вы телепортированы на точку спавна', 
@@ -209,7 +278,7 @@ io.on('connection', (socket) => {
             if (cmd === 'help') {
                 socket.emit('receiveMessage', { 
                     nick: 'СЕРВЕР', 
-                    msg: 'Команды: /login [пароль], /tp [ник], /fly, /nofly, /kill [ник], /respawn, /pos' 
+                    msg: 'Команды: /login [пароль], /tp [ник], /fly, /nofly, /kill [ник], /respawn, /pos, /stats, /distance' 
                 });
                 return;
             }
@@ -241,6 +310,24 @@ io.on('connection', (socket) => {
                 return;
             }
 
+            if (cmd === 'distance') {
+                socket.emit('receiveMessage', { 
+                    nick: 'СЕРВЕР', 
+                    msg: `Пройдено от спавна: ${Math.floor(player.distanceTraveled)} метров`, 
+                    type: 'sys' 
+                });
+                return;
+            }
+
+            if (cmd === 'stats') {
+                socket.emit('receiveMessage', { 
+                    nick: 'СЕРВЕР', 
+                    msg: `Статистика: Выносливость ${player.stats.maxStamina}% (${player.stats.staminaBoosts} бустов), Топливо ${player.stats.maxFuel}% (${player.stats.fuelBoosts} бустов)`, 
+                    type: 'sys' 
+                });
+                return;
+            }
+
             if (cmd === 'respawn') {
                 const now = Date.now();
                 const cooldownRemaining = 3000 - (now - player.lastRespawnTime);
@@ -256,6 +343,7 @@ io.on('connection', (socket) => {
                 
                 player.lastRespawnTime = now;
                 player.respawnCooldown = true;
+                player.distanceTraveled = 0;
                 
                 setTimeout(() => {
                     if (players[socket.id]) {
@@ -269,6 +357,7 @@ io.on('connection', (socket) => {
                 player.z = WORLD_CONFIG.SPAWN_POSITION.z;
                 
                 socket.emit('teleport', WORLD_CONFIG.SPAWN_POSITION);
+                socket.emit('updateDistance', 0);
                 socket.emit('receiveMessage', { 
                     nick: 'СЕРВЕР', 
                     msg: 'Вы телепортированы на точку спавна' 
@@ -297,7 +386,9 @@ io.on('connection', (socket) => {
             } else if (cmd === 'kill') {
                 const target = Object.values(players).find(p => p.nick === args[1]);
                 if (target) {
+                    target.distanceTraveled = 0;
                     io.to(target.id).emit('teleport', WORLD_CONFIG.SPAWN_POSITION);
+                    io.to(target.id).emit('updateDistance', 0);
                     io.emit('receiveMessage', { 
                         nick: 'СИСТЕМА', 
                         msg: `${target.nick} был телепортирован на спавн администратором`, 
