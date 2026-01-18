@@ -243,7 +243,7 @@
             font-family: 'Courier New', monospace;
         }
 
-        #tab-menu, #music-menu { 
+        #tab-menu, #music-menu, #settings-menu { 
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             width: 500px; max-width: 90vw; background: rgba(5, 5, 30, 0.95); border: 3px solid var(--neon); 
             border-radius: 15px; display: none; z-index: 10000; overflow: hidden;
@@ -402,6 +402,125 @@
             pointer-events: none;
         }
         
+        /* НОВЫЕ СТИЛИ ДЛЯ ДОБАВЛЕННЫХ ЭЛЕМЕНТОВ */
+        
+        #distance-counter {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--purple);
+            border-radius: 25px;
+            padding: 10px 25px;
+            font-size: 14px;
+            color: var(--purple);
+            z-index: 900;
+            backdrop-filter: blur(5px);
+            font-family: 'Courier New', monospace;
+            text-shadow: 0 0 10px var(--purple);
+            box-shadow: 0 0 20px rgba(157, 0, 255, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 220px;
+            justify-content: center;
+        }
+        
+        #distance-icon {
+            font-size: 16px;
+        }
+        
+        #distance-value {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        #settings-btn {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid var(--orange);
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s;
+            backdrop-filter: blur(5px);
+        }
+        
+        #settings-btn:hover {
+            transform: scale(1.1) rotate(90deg);
+            box-shadow: 0 0 20px var(--orange-glow);
+            background: rgba(255, 170, 0, 0.1);
+        }
+        
+        .settings-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .settings-item label {
+            color: var(--neon);
+            font-size: 15px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .settings-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        select.settings-select {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid var(--neon);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            min-width: 120px;
+        }
+        
+        .item-pickup {
+            position: absolute;
+            font-size: 24px;
+            animation: pickupFloat 1s ease-out forwards;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        @keyframes pickupFloat {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-50px) scale(0.5); opacity: 0; }
+        }
+        
+        .platform-moving {
+            animation: platformMove 3s infinite alternate ease-in-out;
+        }
+        
+        .platform-rotating {
+            animation: platformRotate 10s infinite linear;
+        }
+        
+        @keyframes platformMove {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(10px); }
+        }
+        
+        @keyframes platformRotate {
+            0% { transform: rotateY(0); }
+            100% { transform: rotateY(360deg); }
+        }
+        
         @media (max-height: 800px) {
             .game-title { font-size: clamp(36px, 6vw, 48px); margin: 10px 0; }
             .game-subtitle { margin-bottom: 15px; font-size: clamp(14px, 2.5vw, 18px); }
@@ -412,6 +531,7 @@
             button#startBtn { padding: 15px 40px; font-size: 20px; margin: 5px 0 20px 0; }
             #made-by { bottom: 10px; right: 10px; font-size: 10px; }
             #made-by-menu { bottom: 8px; right: 8px; font-size: 10px; }
+            #distance-counter { bottom: 80px; padding: 8px 20px; font-size: 13px; min-width: 200px; }
         }
     </style>
 </head>
@@ -445,6 +565,18 @@
     <div id="made-by">Made by YANFUN TEAM</div>
     <audio id="bgMusic" src="" loop></audio>
 
+    <!-- НОВЫЙ ЭЛЕМЕНТ: СЧЕТЧИК ДИСТАНЦИИ -->
+    <div id="distance-counter">
+        <span id="distance-icon">📍</span>
+        <span>Пройдено от спавна:</span>
+        <span id="distance-value">0 м</span>
+    </div>
+
+    <!-- НОВАЯ КНОПКА: НАСТРОЙКИ ГРАФИКИ -->
+    <div id="settings-btn" title="Настройки графики">
+        ⚙️
+    </div>
+
     <div id="now-playing-box">🎵 СЕЙЧАС ИГРАЕТ: <span id="track-name">---</span></div>
     <div id="voice-ui">🎤 МИКРОФОН АКТИВЕН</div>
     <div id="fly-ui">🚀 РЕЖИМ ПОЛЕТА АКТИВЕН</div>
@@ -460,41 +592,128 @@
         <div id="music-list"></div>
     </div>
 
+    <!-- НОВОЕ МЕНЮ: НАСТРОЙКИ ГРАФИКИ -->
+    <div id="settings-menu">
+        <div class="tab-header">НАСТРОЙКИ ГРАФИКИ ⚙️</div>
+        <div id="settings-content">
+            <div class="settings-item">
+                <label>Качество графики:</label>
+                <div class="settings-control">
+                    <select id="graphics-quality" class="settings-select">
+                        <option value="low">Низкое</option>
+                        <option value="medium" selected>Среднее</option>
+                        <option value="high">Высокое</option>
+                        <option value="ultra">Ультра</option>
+                    </select>
+                </div>
+            </div>
+            <div class="settings-item">
+                <label>Ограничение FPS:</label>
+                <div class="settings-control">
+                    <select id="fps-limit" class="settings-select">
+                        <option value="30">30 FPS</option>
+                        <option value="60" selected>60 FPS</option>
+                        <option value="120">120 FPS</option>
+                        <option value="240">240 FPS</option>
+                        <option value="0">Без ограничения</option>
+                    </select>
+                </div>
+            </div>
+            <div class="settings-item">
+                <label>Количество звезд:</label>
+                <div class="settings-control">
+                    <select id="stars-count" class="settings-select">
+                        <option value="1000">Минимальное</option>
+                        <option value="5000" selected>Среднее</option>
+                        <option value="15000">Высокое</option>
+                        <option value="30000">Максимальное</option>
+                    </select>
+                </div>
+            </div>
+            <div class="settings-item">
+                <label>Детализация мира:</label>
+                <div class="settings-control">
+                    <select id="world-detail" class="settings-select">
+                        <option value="low">Низкая</option>
+                        <option value="medium" selected>Средняя</option>
+                        <option value="high">Высокая</option>
+                    </select>
+                </div>
+            </div>
+            <div class="settings-item">
+                <label>Тени:</label>
+                <div class="settings-control">
+                    <select id="shadows" class="settings-select">
+                        <option value="off">Выключены</option>
+                        <option value="low">Низкие</option>
+                        <option value="high" selected>Высокие</option>
+                    </select>
+                </div>
+            </div>
+            <div class="settings-item">
+                <label>Эффекты частиц:</label>
+                <div class="settings-control">
+                    <select id="particles" class="settings-select">
+                        <option value="off">Выключены</option>
+                        <option value="low" selected>Низкие</option>
+                        <option value="high">Высокие</option>
+                    </select>
+                </div>
+            </div>
+            <div class="settings-item" style="justify-content: center; padding: 20px;">
+                <button id="apply-settings" style="
+                    padding: 10px 30px;
+                    background: linear-gradient(45deg, var(--neon), var(--green));
+                    border: none;
+                    border-radius: 8px;
+                    color: black;
+                    font-weight: bold;
+                    cursor: pointer;
+                    font-family: 'Courier New', monospace;
+                ">ПРИМЕНИТЬ</button>
+            </div>
+        </div>
+    </div>
+
     <div id="menu">
         <h1 class="game-title">NEON&TALK</h1>
-        <h2 class="game-subtitle">CYBERPUNK EDITION</h2>
+        <h2 class="game-subtitle">CYBERPUNK EDITION v2.0</h2>
         
         <div id="story-box">
-            <h2>📖 СЮЖЕТ И ЦЕЛЬ ИГРЫ</h2>
-            <p>🔹 <b>2077 год, НЕОН-СИТИ</b>: Вы - беглый хакер, скрывающийся в глубинах подземного мегаполиса.</p>
-            <p>🔹 <b>Ваша миссия</b>: Исследовать кибертуннели, найти других хакеров и установить связь с внешним миром.</p>
-            <p>🔹 <b>Респавн</b>: Нажмите кнопку "РЕСПАВН" или напишите в чат <span style="color:var(--red)">/respawn</span> чтобы вернуться на старт.</p>
-            <p>🔹 <b>Особенность</b>: Голосовой чат работает только на расстоянии до 60 метров - держитесь рядом с союзниками!</p>
+            <h2>📖 ОБНОВЛЕНИЕ 2.0 - НОВЫЕ ВОЗМОЖНОСТИ</h2>
+            <p>🔹 <b>БЕСКОНЕЧНЫЙ МИР</b>: Теперь мир генерируется бесконечно - летайте сколько угодно!</p>
+            <p>🔹 <b>ПАРКУР И ДВИЖУЩИЕСЯ ПЛАТФОРМЫ</b>: Новые типы платформ для интересного геймплея.</p>
+            <p>🔹 <b>СЧЕТЧИК ДИСТАНЦИИ</b>: Смотрите сколько метров вы пролетели от спавна.</p>
+            <p>🔹 <b>ПРЕДМЕТЫ УЛУЧШЕНИЙ</b>: Собирайте бусты для увеличения стамины и топлива.</p>
+            <p>🔹 <b>НАСТРОЙКИ ГРАФИКИ</b>: Настройте игру под возможности вашего ПК.</p>
+            <p>🔹 <b>УЛУЧШЕННАЯ ГЕНЕРАЦИЯ</b>: Больше звезд, больше деталей, лучше оптимизация!</p>
         </div>
         
         <div id="tutorial-box">
             <h2>🎮 КАК ИГРАТЬ - БЫСТРЫЙ СТАРТ</h2>
             
             <div class="tutorial-item">
-                <b>🔥 УПРАВЛЕНИЕ КУРСОРОМ:</b><br>
-                • В игре курсор захвачен для поворота камеры<br>
-                • <span style="color:var(--orange)">Нажмите ESC</span> - чтобы освободить курсор<br>
-                • <span style="color:var(--green)">Нажмите "ЗАХВАТИТЬ КУРСОР"</span> - чтобы вернуть управление игре
+                <b>🔥 НОВЫЕ ЭЛЕМЕНТЫ:</b><br>
+                • <span style="color:var(--purple)">Движущиеся платформы</span> - платформы которые двигаются вверх-вниз<br>
+                • <span style="color:var(--orange)">Вращающиеся платформы</span> - платформы которые вращаются<br>
+                • <span style="color:var(--green)">Бусты улучшений</span> - собирайте для увеличения стамины и топлива<br>
+                • <span style="color:var(--red)">Настройки графики</span> - кнопка ⚙️ в правом верхнем углу
             </div>
             
             <div class="tutorial-item">
                 <b>🔧 АДМИНИСТРАТОР:</b><br>
                 • Введите в чат: <span style="color:var(--pink)">/login пароль</span> - получить права админа<br>
                 • Введите: <span style="color:var(--neon)">/help</span> - список всех команд<br>
-                • Доступные команды: <span style="color:var(--green)">/tp [ник], /fly, /nofly, /kill [ник], /respawn, /pos</span>
+                • <span style="color:var(--green)">/distance</span> - сколько метров пройдено<br>
+                • <span style="color:var(--orange)">/stats</span> - ваша статистика улучшений
             </div>
             
             <div class="tutorial-item">
-                <b>🔊 ГОЛОСОВОЙ ЧАТ (ИСПРАВЛЕН):</b><br>
-                • Зажмите <span style="color:var(--green)">V</span> - говорить в микрофон<br>
-                • Слышно только на расстоянии до 60 метров<br>
-                • Исправлено: нет больше "дерганого" звука<br>
-                • Индикатор в правом верхнем углу
+                <b>📊 НОВЫЕ КОМАНДЫ:</b><br>
+                • <span style="color:var(--green)">/distance</span> - пройденная дистанция<br>
+                • <span style="color:var(--orange)">/stats</span> - статистика улучшений<br>
+                • <span style="color:var(--neon)">⚙️ Кнопка настроек</span> - настройки графики<br>
+                • <span style="color:var(--purple)">📍 Счетчик дистанции</span> - внизу экрана
             </div>
         </div>
         
@@ -503,13 +722,14 @@
                 <span>Движение:</span> <span class="key-hint">W A S D</span>
                 <span>Джетпак:</span> <span class="key-hint">SPACE (ЗАЖАТЬ)</span>
                 <span>Плейлист:</span> <span class="key-hint">КЛАВИША P</span>
-                <span>Бег / Админка:</span> <span class="key-hint">SHIFT / "/login пароль"</span>
+                <span>Настройки:</span> <span class="key-hint">КНОПКА ⚙️ (справа сверху)</span>
                 <span>Чат:</span> <span class="key-hint">ENTER</span>
                 <span>Голосовой чат:</span> <span class="key-hint">ЗАЖАТЬ V</span>
                 <span>Список игроков:</span> <span class="key-hint">TAB</span>
-                <span>Респавн:</span> <span class="key-hint">КНОПКА "РЕСПАВН" (3 сек. кд)</span>
-                <span>Позиция:</span> <span class="key-hint">/pos в чате</span>
+                <span>Респавн:</span> <span class="key-hint">КНОПКА "РЕСПАВН"</span>
+                <span>Дистанция:</span> <span class="key-hint">/distance в чате</span>
                 <span>Освободить курсор:</span> <span class="key-hint">ESC</span>
+                <span>Сбор предметов:</span> <span class="key-hint">ПОДЛЕТЕТЬ К НИМ</span>
             </div>
         </div>
         
@@ -569,19 +789,33 @@
         const menu = document.getElementById('menu');
         const madeBy = document.getElementById('made-by');
         
+        // НОВЫЕ ЭЛЕМЕНТЫ
+        const distanceCounter = document.getElementById('distance-counter');
+        const distanceValue = document.getElementById('distance-value');
+        const settingsBtn = document.getElementById('settings-btn');
+        const settingsMenu = document.getElementById('settings-menu');
+        const graphicsQuality = document.getElementById('graphics-quality');
+        const fpsLimit = document.getElementById('fps-limit');
+        const starsCount = document.getElementById('stars-count');
+        const worldDetail = document.getElementById('world-detail');
+        const shadows = document.getElementById('shadows');
+        const particles = document.getElementById('particles');
+        const applySettings = document.getElementById('apply-settings');
+        
         // Элементы модального окна респавна
         const respawnModal = document.getElementById('respawn-modal');
         const respawnTimer = document.getElementById('respawn-timer');
         
-        // Конфигурация мира (будет получена от сервера)
+        // Конфигурация мира
         let WORLD_CONFIG = {
             PLATFORM_SPACING: 12,
             PLATFORM_WIDTH: 18,
             PLATFORM_DEPTH: 18,
-            SPAWN_POSITION: { x: 0, y: 1.7, z: 0 }, // ФИКС: Высота игрока над платформой
-            SPAWN_PLATFORM_POSITION: { x: 0, y: 0, z: 0 }, // ФИКС: Позиция платформы спавна
-            GENERATION_DISTANCE: 150, // УВЕЛИЧЕНО С 50 ДО 150
-            MAX_PLATFORMS: 400 // УВЕЛИЧЕНО С 200 ДО 400
+            SPAWN_POSITION: { x: 0, y: 1.7, z: 0 },
+            SPAWN_PLATFORM_POSITION: { x: 0, y: 0, z: 0 },
+            GENERATION_DISTANCE: 150,
+            MAX_PLATFORMS: 1000,
+            WORLD_HEIGHT_LIMIT: -5000
         };
 
         // Игровые переменные
@@ -590,10 +824,14 @@
         const audioPlayers = {};
         const clock = new THREE.Clock();
         let frameCount = 0, lastTime = performance.now(), fps = 0;
+        let targetFPS = 60;
+        let lastFrameTime = 0;
         
         // Переменные для стамины
         let stamina = 100;
+        let staminaMax = 100;
         let jetpackFuel = 100;
+        let fuelMax = 100;
         let isSprinting = false;
         let sprintCooldown = false;
         let canSprint = true;
@@ -607,34 +845,140 @@
         let platforms = [];
         let worldGenerated = false;
         let lastGeneratedIndex = 0;
-        const PLATFORM_COUNT = 400; // УВЕЛИЧЕНО С 200 ДО 400
-        let particles;
+        const PLATFORM_COUNT = 1000; // Увеличено для бесконечной генерации
+        let particlesSystem;
+        let distanceTraveled = 0;
+        
+        // Настройки графики
+        let graphicsSettings = {
+            quality: 'medium',
+            fpsLimit: 60,
+            stars: 5000,
+            worldDetail: 'medium',
+            shadows: true,
+            particles: true,
+            shadowQuality: 'high'
+        };
+
+        // Загрузка настроек из localStorage
+        function loadSettings() {
+            const saved = localStorage.getItem('neontalk_settings');
+            if (saved) {
+                graphicsSettings = JSON.parse(saved);
+                
+                // Применяем загруженные настройки к UI
+                graphicsQuality.value = graphicsSettings.quality;
+                fpsLimit.value = graphicsSettings.fpsLimit;
+                starsCount.value = graphicsSettings.stars;
+                worldDetail.value = graphicsSettings.worldDetail;
+                shadows.value = graphicsSettings.shadowQuality;
+                particles.value = graphicsSettings.particles ? 'high' : 'off';
+                
+                targetFPS = parseInt(graphicsSettings.fpsLimit) || 60;
+            }
+        }
+
+        // Сохранение настроек в localStorage
+        function saveSettings() {
+            localStorage.setItem('neontalk_settings', JSON.stringify(graphicsSettings));
+        }
+
+        // Применение настроек графики
+        function applyGraphicsSettings() {
+            graphicsSettings.quality = graphicsQuality.value;
+            graphicsSettings.fpsLimit = parseInt(fpsLimit.value);
+            graphicsSettings.stars = parseInt(starsCount.value);
+            graphicsSettings.worldDetail = worldDetail.value;
+            graphicsSettings.shadowQuality = shadows.value;
+            graphicsSettings.particles = particles.value !== 'off';
+            
+            targetFPS = graphicsSettings.fpsLimit || 60;
+            
+            // Обновляем рендерер
+            updateRendererSettings();
+            
+            // Пересоздаем звезды с новыми настройками
+            if (stars) {
+                initStars();
+            }
+            
+            // Сохраняем настройки
+            saveSettings();
+            
+            // Закрываем меню настроек
+            settingsMenu.style.display = 'none';
+            if (isGaming) requestLock();
+            
+            // Сообщение об успехе
+            if (isGaming) {
+                const chatMessage = {
+                    nick: 'СИСТЕМА',
+                    msg: 'Настройки графики применены!',
+                    type: 'sys'
+                };
+                socket.emit('receiveMessage', chatMessage);
+            }
+        }
+
+        // Обновление настроек рендерера
+        function updateRendererSettings() {
+            // Качество графики
+            switch(graphicsSettings.quality) {
+                case 'low':
+                    renderer.setPixelRatio(1);
+                    renderer.shadowMap.enabled = false;
+                    break;
+                case 'medium':
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+                    renderer.shadowMap.enabled = true;
+                    renderer.shadowMap.type = THREE.BasicShadowMap;
+                    break;
+                case 'high':
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                    renderer.shadowMap.enabled = true;
+                    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                    break;
+                case 'ultra':
+                    renderer.setPixelRatio(window.devicePixelRatio);
+                    renderer.shadowMap.enabled = true;
+                    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                    break;
+            }
+            
+            // Тени
+            if (directionalLight) {
+                directionalLight.castShadow = graphicsSettings.shadowQuality !== 'off';
+                
+                if (graphicsSettings.shadowQuality === 'low') {
+                    directionalLight.shadow.mapSize.width = 512;
+                    directionalLight.shadow.mapSize.height = 512;
+                } else if (graphicsSettings.shadowQuality === 'high') {
+                    directionalLight.shadow.mapSize.width = 2048;
+                    directionalLight.shadow.mapSize.height = 2048;
+                }
+            }
+        }
 
         // ФИКС: Переменная для защиты от быстрого нажатия пробела
         let spacePressTime = 0;
-        const SPACE_COOLDOWN = 300; // 300 мс между прыжками
+        const SPACE_COOLDOWN = 300;
 
         // --- СИСТЕМА ПЕРЕЗАПУСКА ПРИ РЕСПАВНЕ ---
         function showRespawnModal() {
-            // Останавливаем музыку
             if (bgMusic) {
                 bgMusic.pause();
                 bgMusic.currentTime = 0;
             }
             
-            // Останавливаем голосовой чат
             if (audioCtx) {
                 audioCtx.close();
             }
             
-            // Отключаем сокет
             socket.disconnect();
             
-            // Показываем модальное окно
             respawnModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
             
-            // Запускаем таймер обратного отсчета
             let seconds = 10;
             respawnTimer.textContent = seconds;
             
@@ -642,7 +986,6 @@
                 seconds--;
                 respawnTimer.textContent = seconds;
                 
-                // Меняем цвет таймера в зависимости от времени
                 if (seconds <= 3) {
                     respawnTimer.style.color = 'var(--red)';
                     respawnTimer.style.textShadow = '0 0 20px var(--red)';
@@ -653,43 +996,115 @@
                 
                 if (seconds <= 0) {
                     clearInterval(respawnCountdownInterval);
-                    // Перезагружаем страницу
                     window.location.reload();
                 }
             }, 1000);
         }
 
-        // --- ЗВЕЗДНОЕ НЕБО ---
-        function createStars(count = 15000) {
+        // --- ОПТИМИЗИРОВАННОЕ ЗВЕЗДНОЕ НЕБО ---
+        function createStars(count = 5000) {
+            // Очищаем старые звезды
+            if (stars) {
+                scene.remove(stars);
+            }
+            
+            // Для слабых ПК используем простые спрайты
+            if (count > 10000 && graphicsSettings.quality === 'low') {
+                count = 3000;
+            }
+            
             const starGeometry = new THREE.BufferGeometry();
             const starMaterial = new THREE.PointsMaterial({
-                color: 0xFFFFFF,
                 size: 0.07,
                 transparent: true,
-                opacity: 0.9
+                opacity: 0.9,
+                vertexColors: true
             });
             
             const starVertices = [];
+            const starColors = [];
+            
+            // Цвета звезд
+            const starColorsPalette = [
+                0xFFFFFF, // Белый
+                0x00D9FF, // Голубой
+                0xFFAA00, // Оранжевый
+                0xFF00FF, // Розовый
+                0x00FF88, // Зеленый
+                0x9D00FF  // Фиолетовый
+            ];
+            
             for (let i = 0; i < count; i++) {
-                const x = (Math.random() - 0.5) * 8000;
-                const y = (Math.random() - 0.5) * 8000;
-                const z = (Math.random() - 0.5) * 8000;
+                // Распределение звезд в сфере
+                const radius = 2000 + Math.random() * 3000;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos((Math.random() * 2) - 1);
+                
+                const x = radius * Math.sin(phi) * Math.cos(theta);
+                const y = radius * Math.sin(phi) * Math.sin(theta);
+                const z = radius * Math.cos(phi);
+                
                 starVertices.push(x, y, z);
+                
+                // Случайный цвет звезды
+                const colorIndex = Math.floor(Math.random() * starColorsPalette.length);
+                const color = new THREE.Color(starColorsPalette[colorIndex]);
+                
+                // Немного варьируем яркость
+                const brightness = 0.7 + Math.random() * 0.3;
+                color.multiplyScalar(brightness);
+                
+                starColors.push(color.r, color.g, color.b);
             }
             
             starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starVertices, 3));
-            return new THREE.Points(starGeometry, starMaterial);
+            starGeometry.setAttribute('color', new THREE.Float32BufferAttribute(starColors, 3));
+            
+            stars = new THREE.Points(starGeometry, starMaterial);
+            scene.add(stars);
+            
+            return stars;
         }
 
-        // --- НЕОНОВЫЕ ТУННЕЛИ И ПЛАТФОРМЫ ---
-        function createCyberPlatform(x, y, z, type = 'normal') {
+        // Функция для определения типа платформы
+        function getPlatformType(index) {
+            if (index === 0) return 'spawn';
+            
+            const seed = index * 12345 + 67890;
+            const rand = (seed % 1000) / 1000;
+            
+            if (index < 10) return 'normal';
+            
+            if (rand < 0.5) return 'normal';
+            if (rand < 0.65) return 'moving';
+            if (rand < 0.75) return 'jump';
+            if (rand < 0.85) return 'rotating';
+            if (rand < 0.92) return 'narrow';
+            return 'item';
+        }
+
+        // --- УЛУЧШЕННЫЕ НЕОНОВЫЕ ПЛАТФОРМЫ С ПАРКУРОМ ---
+        function createCyberPlatform(x, y, z, type = 'normal', index = 0) {
             const group = new THREE.Group();
             
-            // Платформа
+            // Размеры платформы в зависимости от типа
+            let width = WORLD_CONFIG.PLATFORM_WIDTH;
+            let depth = WORLD_CONFIG.PLATFORM_DEPTH;
+            
+            if (type === 'narrow') {
+                width = 8;
+                depth = 8;
+            } else if (type === 'jump') {
+                width = 6;
+                depth = 6;
+            }
+            
+            // Цвет платформы
             const colors = [0x00d9ff, 0xff00ff, 0x00ff88, 0xffaa00, 0x9d00ff];
             const color = colors[Math.floor(Math.random() * colors.length)];
             
-            const platformGeo = new THREE.BoxGeometry(WORLD_CONFIG.PLATFORM_WIDTH, 0.5, WORLD_CONFIG.PLATFORM_DEPTH);
+            // Основная платформа
+            const platformGeo = new THREE.BoxGeometry(width, 0.5, depth);
             const platformMat = new THREE.MeshStandardMaterial({
                 color: 0x111111,
                 emissive: color,
@@ -702,7 +1117,7 @@
             group.add(platform);
             
             // Неоновые полосы по краям
-            const edgeGeo = new THREE.BoxGeometry(WORLD_CONFIG.PLATFORM_WIDTH + 2, 0.2, 0.5);
+            const edgeGeo = new THREE.BoxGeometry(width + 2, 0.2, 0.5);
             const edgeMat = new THREE.MeshStandardMaterial({
                 color: color,
                 emissive: color,
@@ -713,10 +1128,10 @@
             
             const edges = [];
             const edgePositions = [
-                [0, 0.3, WORLD_CONFIG.PLATFORM_DEPTH/2], 
-                [0, 0.3, -WORLD_CONFIG.PLATFORM_DEPTH/2], 
-                [WORLD_CONFIG.PLATFORM_WIDTH/2, 0.3, 0], 
-                [-WORLD_CONFIG.PLATFORM_WIDTH/2, 0.3, 0]
+                [0, 0.3, depth/2], 
+                [0, 0.3, -depth/2], 
+                [width/2, 0.3, 0], 
+                [-width/2, 0.3, 0]
             ];
             
             edgePositions.forEach(pos => {
@@ -726,8 +1141,67 @@
                 edges.push(edge);
             });
             
-            // Вращающиеся голограммы
-            if (Math.random() > 0.7) {
+            // НЕОНОВЫЕ СТОЛБЫ С КОЛЛИЗИЯМИ
+            const pillars = [];
+            const pillarCount = type === 'item' ? 2 : Math.floor(Math.random() * 3) + 1;
+            
+            for (let i = 0; i < pillarCount; i++) {
+                const pillarHeight = 2 + Math.random() * 4;
+                const pillarGeo = new THREE.CylinderGeometry(0.3, 0.3, pillarHeight, 8);
+                const pillarMat = new THREE.MeshStandardMaterial({
+                    color: color,
+                    emissive: color,
+                    emissiveIntensity: 0.8
+                });
+                const pillar = new THREE.Mesh(pillarGeo, pillarMat);
+                
+                // Распределяем столбы по платформе
+                const angle = (i / pillarCount) * Math.PI * 2;
+                const radius = (width / 2) - 1;
+                pillar.position.set(
+                    Math.cos(angle) * radius,
+                    pillarHeight / 2,
+                    Math.sin(angle) * radius
+                );
+                
+                group.add(pillar);
+                pillars.push({
+                    mesh: pillar,
+                    height: pillarHeight,
+                    radius: 0.3
+                });
+            }
+            
+            // ДОБАВЛЯЕМ ПРЕДМЕТЫ НА ПЛАТФОРМЫ ТИПА 'item'
+            let item = null;
+            if (type === 'item') {
+                const itemType = Math.random() > 0.5 ? 'stamina' : 'fuel';
+                const itemColor = itemType === 'stamina' ? 0x00ff88 : 0xffaa00;
+                
+                const itemGeo = new THREE.SphereGeometry(0.5, 8, 8);
+                const itemMat = new THREE.MeshStandardMaterial({
+                    color: itemColor,
+                    emissive: itemColor,
+                    emissiveIntensity: 0.8,
+                    transparent: true,
+                    opacity: 0.9
+                });
+                
+                item = new THREE.Mesh(itemGeo, itemMat);
+                item.position.set(0, 3, 0);
+                group.add(item);
+                
+                // Анимация парящего предмета
+                item.userData = {
+                    type: itemType,
+                    color: itemColor,
+                    collected: false,
+                    floatOffset: Math.random() * Math.PI * 2
+                };
+            }
+            
+            // Вращающиеся голограммы для некоторых платформ
+            if (Math.random() > 0.7 && type !== 'narrow') {
                 const hologramGeo = new THREE.CylinderGeometry(3, 3, 6, 8);
                 const hologramMat = new THREE.MeshBasicMaterial({
                     color: color,
@@ -741,34 +1215,35 @@
                 hologram.userData.rotate = true;
             }
             
-            // Случайные неоновые столбы
-            for (let i = 0; i < 4; i++) {
-                if (Math.random() > 0.5) {
-                    const pillarGeo = new THREE.CylinderGeometry(0.3, 0.3, 3, 8);
-                    const pillarMat = new THREE.MeshStandardMaterial({
-                        color: color,
-                        emissive: color,
-                        emissiveIntensity: 0.8
-                    });
-                    const pillar = new THREE.Mesh(pillarGeo, pillarMat);
-                    pillar.position.set(
-                        (Math.random() - 0.5) * 14,
-                        1.5,
-                        (Math.random() - 0.5) * 14
-                    );
-                    group.add(pillar);
-                }
+            // АНИМАЦИИ ДЛЯ СПЕЦИАЛЬНЫХ ПЛАТФОРМ
+            if (type === 'moving') {
+                group.userData.moveOffset = Math.random() * Math.PI * 2;
+                group.userData.moveSpeed = 0.5 + Math.random() * 1;
+                group.userData.moveDistance = 5 + Math.random() * 10;
+                group.userData.moveAxis = Math.random() > 0.5 ? 'x' : 'z';
+            }
+            
+            if (type === 'rotating') {
+                group.userData.rotateSpeed = 0.5 + Math.random() * 1;
+            }
+            
+            if (type === 'jump') {
+                platformMat.emissiveIntensity = 0.8;
+                platformMat.emissive.set(0xffff00);
             }
             
             group.position.set(x, y, z);
-            group.userData = { 
-                hw: WORLD_CONFIG.PLATFORM_WIDTH/2, 
-                hh: 0.25, 
-                hd: WORLD_CONFIG.PLATFORM_DEPTH/2,
+            group.userData = {
+                hw: width/2,
+                hh: 0.25,
+                hd: depth/2,
                 color: color,
                 edges: edges,
-                hologram: group.children.find(c => c.userData.rotate),
-                type: type
+                pillars: pillars,
+                hologram: group.children.find(c => c.userData && c.userData.rotate),
+                item: item,
+                type: type,
+                index: index
             };
             
             return group;
@@ -777,19 +1252,114 @@
         // Детерминированная функция для получения позиции платформы
         function getPlatformPosition(index, isSpawn = false) {
             if (isSpawn) {
-                return WORLD_CONFIG.SPAWN_PLATFORM_POSITION; // ФИКС: Спавн платформа всегда на (0,0,0)
+                return WORLD_CONFIG.SPAWN_PLATFORM_POSITION;
             }
+            
+            // БЕСКОНЕЧНАЯ ГЕНЕРАЦИЯ: используем модуль для бесконечного повторения
+            const wrappedIndex = index % 1000; // Повторяем каждые 1000 платформ
             
             const y = -index * WORLD_CONFIG.PLATFORM_SPACING;
             const z = -index * 25;
             
             // Детерминированный RNG на основе индекса
-            const seed = index * 9301 + 49297;
+            const seed = wrappedIndex * 9301 + 49297;
             const rand = (seed % 233280) / 233280;
             
-            const x = (rand - 0.5) * 100;
+            // Для разнообразия иногда делаем платформы выше/ниже
+            const heightVariation = (Math.sin(wrappedIndex * 0.1) * 5);
+            const finalY = y + heightVariation;
             
-            return { x, y, z };
+            // Более интересное распределение по X
+            const x = (Math.sin(wrappedIndex * 0.05) * 40) + ((rand - 0.5) * 20);
+            
+            return { x, y: finalY, z };
+        }
+
+        // Проверка коллизий с учетом столбов
+        function checkCollision(pos) {
+            const r = 0.5, h = 1.8;
+            
+            for (let p of platforms) {
+                // Коллизия с платформой
+                if (pos.x > p.position.x - p.userData.hw - r && 
+                    pos.x < p.position.x + p.userData.hw + r &&
+                    pos.y > p.position.y - p.userData.hh - h && 
+                    pos.y < p.position.y + p.userData.hh + 0.5 &&
+                    pos.z > p.position.z - p.userData.hd - r && 
+                    pos.z < p.position.z + p.userData.hd + r) {
+                    return { collision: true, platform: p };
+                }
+                
+                // Коллизия со столбами на платформе
+                if (p.userData.pillars) {
+                    for (let pillar of p.userData.pillars) {
+                        const pillarPos = new THREE.Vector3(
+                            pillar.mesh.position.x + p.position.x,
+                            pillar.mesh.position.y + p.position.y,
+                            pillar.mesh.position.z + p.position.z
+                        );
+                        
+                        const dx = pos.x - pillarPos.x;
+                        const dz = pos.z - pillarPos.z;
+                        const distance = Math.sqrt(dx * dx + dz * dz);
+                        
+                        if (distance < pillar.radius + r && 
+                            pos.y > pillarPos.y - pillar.height/2 && 
+                            pos.y < pillarPos.y + pillar.height/2) {
+                            return { collision: true, platform: p, pillar: true };
+                        }
+                    }
+                }
+                
+                // Проверка сбора предметов
+                if (p.userData.item && !p.userData.item.userData.collected) {
+                    const itemPos = new THREE.Vector3(
+                        p.userData.item.position.x + p.position.x,
+                        p.userData.item.position.y + p.position.y,
+                        p.userData.item.position.z + p.position.z
+                    );
+                    
+                    const dx = pos.x - itemPos.x;
+                    const dy = pos.y - itemPos.y;
+                    const dz = pos.z - itemPos.z;
+                    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                    
+                    if (distance < 1.5) {
+                        return { collision: false, platform: p, item: p.userData.item };
+                    }
+                }
+            }
+            
+            return { collision: false };
+        }
+
+        // Эффект сбора предмета
+        function collectItem(item, platform) {
+            if (item.userData.collected) return;
+            
+            item.userData.collected = true;
+            platform.remove(item);
+            
+            // Визуальный эффект
+            const pickupEffect = document.createElement('div');
+            pickupEffect.className = 'item-pickup';
+            pickupEffect.textContent = item.userData.type === 'stamina' ? '⚡ +25%' : '🛢️ +25%';
+            pickupEffect.style.color = item.userData.type === 'stamina' ? '#00ff88' : '#ffaa00';
+            pickupEffect.style.position = 'fixed';
+            pickupEffect.style.left = '50%';
+            pickupEffect.style.top = '50%';
+            pickupEffect.style.transform = 'translate(-50%, -50%)';
+            document.body.appendChild(pickupEffect);
+            
+            // Отправляем на сервер
+            socket.emit('collectItem', item.userData.type);
+            
+            // Удаляем эффект через 1 секунду
+            setTimeout(() => {
+                if (pickupEffect.parentNode) {
+                    pickupEffect.parentNode.removeChild(pickupEffect);
+                }
+            }, 1000);
         }
 
         // --- ЛОГИКА МУЗЫКИ ---
@@ -852,7 +1422,6 @@
             const timeLeft = Math.ceil((respawnCooldownEndTime - now) / 1000);
             
             if (respawnCooldown && timeLeft > 0) {
-                // Показываем сообщение о кулдауне
                 const chatMessage = {
                     nick: 'СИСТЕМА',
                     msg: `Респавн на кулдауне: ${timeLeft} сек.`,
@@ -864,16 +1433,13 @@
             
             console.log("Запуск процедуры респавна...");
             
-            // Отправляем запрос на респавн серверу
             socket.emit('requestRespawn');
             
-            // Включаем локальный кулдаун
             respawnCooldown = true;
             respawnCooldownEndTime = now + 3000;
             respawnBtn.disabled = true;
             respawnBtn.textContent = '🔄 КУЛДАУН (3с)';
             
-            // Показываем модальное окно перезапуска через 1 секунду (для визуального эффекта)
             setTimeout(() => {
                 showRespawnModal();
             }, 1000);
@@ -907,6 +1473,22 @@
             }
         }
 
+        // Обработчик для кнопки настроек
+        settingsBtn.addEventListener('click', () => {
+            if (!isGaming) return;
+            
+            const isShown = settingsMenu.style.display === 'block';
+            settingsMenu.style.display = isShown ? 'none' : 'block';
+            if (!isShown) {
+                document.exitPointerLock();
+            } else {
+                if (isGaming) requestLock();
+            }
+        });
+
+        // Применение настроек
+        applySettings.addEventListener('click', applyGraphicsSettings);
+
         // --- УПРАВЛЕНИЕ КУРСОРОМ ---
         function requestLock() {
             if (isGaming && document.activeElement !== chatInput) {
@@ -918,6 +1500,12 @@
         document.addEventListener('keydown', (e) => {
             if (e.code === 'Escape') {
                 document.exitPointerLock();
+                // Закрываем все открытые меню
+                if (musicMenu.style.display === 'block') musicMenu.style.display = 'none';
+                if (settingsMenu.style.display === 'block') settingsMenu.style.display = 'none';
+                if (document.getElementById('tab-menu').style.display === 'block') {
+                    document.getElementById('tab-menu').style.display = 'none';
+                }
             }
         });
 
@@ -932,7 +1520,7 @@
         let audioProcessor = null;
         let audioInterval = null;
         
-        const SAMPLE_RATE = 22050; 
+        const SAMPLE_RATE = 22050;
         
         async function initVoice() {
             try {
@@ -1078,19 +1666,44 @@
         socket.on('worldConfig', (config) => {
             WORLD_CONFIG = config;
             console.log("Получена конфигурация мира:", WORLD_CONFIG);
-            console.log("Спавн позиция:", WORLD_CONFIG.SPAWN_POSITION);
-            console.log("Платформа спавна:", WORLD_CONFIG.SPAWN_PLATFORM_POSITION);
+        });
+
+        socket.on('updateDistance', (distance) => {
+            distanceTraveled = distance;
+            distanceValue.textContent = `${distance} м`;
+            
+            // Меняем цвет в зависимости от дистанции
+            if (distance >= 1000) {
+                distanceCounter.style.borderColor = 'var(--orange)';
+                distanceCounter.style.color = 'var(--orange)';
+                distanceCounter.style.boxShadow = '0 0 20px rgba(255, 170, 0, 0.3)';
+            } else if (distance >= 500) {
+                distanceCounter.style.borderColor = 'var(--green)';
+                distanceCounter.style.color = 'var(--green)';
+                distanceCounter.style.boxShadow = '0 0 20px rgba(0, 255, 136, 0.3)';
+            } else {
+                distanceCounter.style.borderColor = 'var(--purple)';
+                distanceCounter.style.color = 'var(--purple)';
+                distanceCounter.style.boxShadow = '0 0 20px rgba(157, 0, 255, 0.3)';
+            }
+        });
+
+        socket.on('playerStats', (stats) => {
+            staminaMax = stats.maxStamina;
+            fuelMax = stats.maxFuel;
+            
+            // Обновляем полоски если текущие значения превышают новые максимумы
+            if (stamina > staminaMax) stamina = staminaMax;
+            if (jetpackFuel > fuelMax) jetpackFuel = fuelMax;
         });
 
         socket.on('teleport', (p) => { 
             console.log("Телепортация на:", p);
             
-            // ФИКС: Устанавливаем позицию точно как сказал сервер
             cameraHolder.position.set(p.x, p.y, p.z); 
             velY = 0; 
-            jetpackFuel = 100;
+            jetpackFuel = fuelMax;
             
-            // ФИКС: Немедленно синхронизируем позицию с сервером
             socket.emit('move', {
                 x: p.x, 
                 y: p.y, 
@@ -1098,7 +1711,6 @@
                 nick: myNick
             });
             
-            // ФИКС: Сообщаем игроку
             const div = document.createElement('div');
             div.className = 'msg-line';
             const b = document.createElement('b');
@@ -1126,7 +1738,7 @@
                 WORLD_CONFIG.SPAWN_POSITION.z
             ); 
             velY = 0; 
-            jetpackFuel = 100;
+            jetpackFuel = fuelMax;
             socket.emit('move', {
                 x: WORLD_CONFIG.SPAWN_POSITION.x, 
                 y: WORLD_CONFIG.SPAWN_POSITION.y, 
@@ -1144,12 +1756,15 @@
         cameraHolder.add(camera); 
         scene.add(cameraHolder);
         
-        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "low-power" });
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight); 
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         document.body.appendChild(renderer.domElement);
+
+        // Загружаем настройки
+        loadSettings();
 
         // Неоновое освещение
         const ambientLight = new THREE.AmbientLight(0x222222);
@@ -1173,7 +1788,7 @@
         
         function initStars() {
             if (stars) scene.remove(stars);
-            stars = createStars(15000);
+            stars = createStars(graphicsSettings.stars);
             scene.add(stars);
         }
         
@@ -1301,62 +1916,58 @@
             if (row) row.remove();
         });
 
-        // --- ДИНАМИЧЕСКАЯ ГЕНЕРАЦИЯ МИРА ---
+        // --- БЕСКОНЕЧНАЯ ДИНАМИЧЕСКАЯ ГЕНЕРАЦИЯ МИРА ---
         function generateInitialWorld() {
-            // Очищаем старые платформы
             platforms.forEach(p => {
                 scene.remove(p);
             });
             platforms = [];
             
-            // ФИКС: Создаем спавн платформу точно на (0, 0, 0)
             const spawnPos = WORLD_CONFIG.SPAWN_PLATFORM_POSITION;
             console.log("Создаем спавн платформу на:", spawnPos);
             
-            const startPlatform = createCyberPlatform(spawnPos.x, spawnPos.y, spawnPos.z, 'start');
+            const startPlatform = createCyberPlatform(spawnPos.x, spawnPos.y, spawnPos.z, 'spawn', 0);
             scene.add(startPlatform);
             platforms.push(startPlatform);
             
-            // Генерируем начальный набор платформ
             generateWorldAroundPlayer();
             
-            // Создаем частицы
             createParticles();
             
             worldGenerated = true;
             lastGeneratedIndex = 0;
             
-            console.log("Мир сгенерирован. Спавн платформа создана.");
+            console.log("Мир сгенерирован. Бесконечная генерация активирована.");
         }
 
         function generateWorldAroundPlayer() {
             const playerY = cameraHolder.position.y;
             const targetIndex = Math.floor(Math.abs(playerY - WORLD_CONFIG.GENERATION_DISTANCE) / WORLD_CONFIG.PLATFORM_SPACING);
             
-            // Если мы уже сгенерировали достаточно, не генерируем снова
+            // БЕСКОНЕЧНАЯ ГЕНЕРАЦИЯ: всегда генерируем, если игрок ушел дальше
             if (targetIndex <= lastGeneratedIndex) {
                 return;
             }
             
-            // Определяем, сколько платформ нужно сгенерировать
-            const platformsToGenerate = Math.min(targetIndex - lastGeneratedIndex, 40); // УВЕЛИЧЕНО С 20 ДО 40
+            const platformsToGenerate = Math.min(targetIndex - lastGeneratedIndex, 50);
             
-            for (let i = 0; i < platformsToGenerate && (lastGeneratedIndex + i) < PLATFORM_COUNT; i++) {
+            for (let i = 0; i < platformsToGenerate && lastGeneratedIndex + i < 10000; i++) {
                 const index = lastGeneratedIndex + i;
                 const pos = getPlatformPosition(index);
+                const type = getPlatformType(index);
                 
-                const platform = createCyberPlatform(pos.x, pos.y, pos.z);
+                const platform = createCyberPlatform(pos.x, pos.y, pos.z, type, index);
                 scene.add(platform);
                 platforms.push(platform);
                 
-                // Случайные мостики
-                if (Math.random() > 0.7 && index > 1) {
+                // Создаем мостики между некоторыми платформами
+                if (Math.random() > 0.8 && index > 5 && type !== 'narrow') {
                     const bridgePos = {
                         x: pos.x,
                         y: pos.y + 6,
                         z: pos.z - 12.5
                     };
-                    const bridge = createCyberPlatform(bridgePos.x, bridgePos.y, bridgePos.z, 'bridge');
+                    const bridge = createCyberPlatform(bridgePos.x, bridgePos.y, bridgePos.z, 'normal', index + 1000);
                     scene.add(bridge);
                     platforms.push(bridge);
                 }
@@ -1364,12 +1975,12 @@
             
             lastGeneratedIndex += platformsToGenerate;
             
-            // Очищаем слишком далекие платформы (оптимизация)
+            // Очищаем слишком далекие платформы для оптимизации
             cleanupDistantPlatforms(playerY);
         }
 
         function cleanupDistantPlatforms(playerY) {
-            const MAX_DISTANCE = 300; // УВЕЛИЧЕНО С 200 ДО 300
+            const MAX_DISTANCE = 400;
             
             for (let i = platforms.length - 1; i >= 0; i--) {
                 const platform = platforms[i];
@@ -1383,19 +1994,21 @@
         }
 
         function createParticles() {
-            if (particles) {
-                scene.remove(particles);
+            if (particlesSystem) {
+                scene.remove(particlesSystem);
             }
             
-            const particleCount = 1000;
+            if (!graphicsSettings.particles) return;
+            
+            const particleCount = 500;
             const particleGeometry = new THREE.BufferGeometry();
             const particlePositions = new Float32Array(particleCount * 3);
             const particleColors = new Float32Array(particleCount * 3);
             
             for (let i = 0; i < particleCount; i++) {
-                particlePositions[i * 3] = (Math.random() - 0.5) * 800; // УВЕЛИЧЕНО С 500 ДО 800
-                particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 800 - 200; // УВЕЛИЧЕНО С 500 ДО 800
-                particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 800 - 400; // УВЕЛИЧЕНО С 500 ДО 800
+                particlePositions[i * 3] = (Math.random() - 0.5) * 800;
+                particlePositions[i * 3 + 1] = (Math.random() - 0.5) * 800 - 200;
+                particlePositions[i * 3 + 2] = (Math.random() - 0.5) * 800 - 400;
                 
                 const color = new THREE.Color(
                     Math.random() > 0.5 ? 0x00d9ff : 0xff00ff
@@ -1415,24 +2028,8 @@
                 opacity: 0.6
             });
             
-            particles = new THREE.Points(particleGeometry, particleMaterial);
-            scene.add(particles);
-        }
-
-        // Коллизии
-        function checkCollision(pos) {
-            const r = 0.5, h = 1.8;
-            for (let p of platforms) {
-                if (pos.x > p.position.x - p.userData.hw - r && 
-                    pos.x < p.position.x + p.userData.hw + r &&
-                    pos.y > p.position.y - p.userData.hh - h && 
-                    pos.y < p.position.y + p.userData.hh + 0.5 &&
-                    pos.z > p.position.z - p.userData.hd - r && 
-                    pos.z < p.position.z + p.userData.hd + r) {
-                    return true;
-                }
-            }
-            return false;
+            particlesSystem = new THREE.Points(particleGeometry, particleMaterial);
+            scene.add(particlesSystem);
         }
 
         // --- INPUT ---
@@ -1534,14 +2131,15 @@
                 myNick = "НОВЫЙ";
             }
             
-            // ФИКС: Сначала устанавливаем позицию, потом подключаемся
             cameraHolder.position.set(
                 WORLD_CONFIG.SPAWN_POSITION.x,
                 WORLD_CONFIG.SPAWN_POSITION.y,
                 WORLD_CONFIG.SPAWN_POSITION.z
             );
             velY = 0;
-            jetpackFuel = 100;
+            jetpackFuel = fuelMax;
+            distanceTraveled = 0;
+            distanceValue.textContent = "0 м";
             
             socket.emit('initPlayer', myNick);
             menu.style.display = 'none';
@@ -1549,13 +2147,14 @@
             volumeContainer.style.display = 'flex'; 
             fpsCounter.style.display = 'block';
             respawnBtn.style.display = 'flex';
+            settingsBtn.style.display = 'flex';
+            distanceCounter.style.display = 'flex';
             
             isGaming = true; 
             requestLock(); 
             initVoice();
             loadPlaylist();
             
-            // Ждем конфигурацию мира перед генерацией
             setTimeout(() => {
                 generateInitialWorld();
             }, 100);
@@ -1580,11 +2179,37 @@
                 frameCount = 0;
                 lastTime = currentTime;
                 fpsCounter.textContent = `FPS: ${fps}`;
+                
+                // Меняем цвет FPS в зависимости от значения
+                if (fps < 30) {
+                    fpsCounter.style.color = 'var(--red)';
+                    fpsCounter.style.borderColor = 'var(--red)';
+                } else if (fps < 50) {
+                    fpsCounter.style.color = 'var(--orange)';
+                    fpsCounter.style.borderColor = 'var(--orange)';
+                } else {
+                    fpsCounter.style.color = 'var(--green)';
+                    fpsCounter.style.borderColor = 'var(--green)';
+                }
             }
         }
 
-        function animate() {
+        function animate(currentTime) {
             requestAnimationFrame(animate);
+            
+            // Ограничение FPS
+            if (targetFPS > 0) {
+                const deltaTime = currentTime - lastFrameTime;
+                const targetDelta = 1000 / targetFPS;
+                
+                if (deltaTime < targetDelta) {
+                    return;
+                }
+                lastFrameTime = currentTime - (deltaTime % targetDelta);
+            } else {
+                lastFrameTime = currentTime;
+            }
+            
             updateFPS();
             
             if(!isGaming) return;
@@ -1595,7 +2220,7 @@
             // Обновляем кулдаун респавна
             updateRespawnCooldown();
 
-            // Динамическая генерация мира
+            // Динамическая генерация мира (БЕСКОНЕЧНАЯ)
             if (worldGenerated) {
                 generateWorldAroundPlayer();
             }
@@ -1616,16 +2241,17 @@
                     }, 3000);
                 }
             } else {
-                if (stamina < 100 && !sprintCooldown) {
-                    stamina = Math.min(100, stamina + 0.4 * fpsMult);
+                if (stamina < staminaMax && !sprintCooldown) {
+                    stamina = Math.min(staminaMax, stamina + 0.4 * fpsMult);
                     if (stamina >= 30 && !canSprint) {
                         canSprint = true;
                     }
                 }
             }
             
-            document.getElementById('stamina-bar').style.width = stamina + "%";
-            document.getElementById('fuel-bar').style.width = jetpackFuel + "%";
+            // Обновляем полоски с учетом новых максимумов
+            document.getElementById('stamina-bar').style.width = (stamina / staminaMax * 100) + "%";
+            document.getElementById('fuel-bar').style.width = (jetpackFuel / fuelMax * 100) + "%";
 
             const staminaBar = document.getElementById('stamina-bar');
             if (stamina <= 20) {
@@ -1642,10 +2268,49 @@
             cameraHolder.rotation.y = yaw; 
             camera.rotation.x = pitch;
 
+            // Анимация платформ
+            platforms.forEach(p => {
+                // Анимация движущихся платформ
+                if (p.userData.type === 'moving' && p.userData.moveOffset !== undefined) {
+                    const time = Date.now() * 0.001;
+                    const offset = Math.sin(time * p.userData.moveSpeed + p.userData.moveOffset) * p.userData.moveDistance;
+                    
+                    if (p.userData.moveAxis === 'x') {
+                        p.position.x = p.userData.originalX + offset;
+                    } else {
+                        p.position.z = p.userData.originalZ + offset;
+                    }
+                }
+                
+                // Анимация вращающихся платформ
+                if (p.userData.type === 'rotating' && p.userData.rotateSpeed) {
+                    p.rotation.y += p.userData.rotateSpeed * dt;
+                }
+                
+                // Анимация предметов
+                if (p.userData.item && !p.userData.item.userData.collected) {
+                    const time = Date.now() * 0.001;
+                    p.userData.item.position.y = 3 + Math.sin(time + p.userData.item.userData.floatOffset) * 0.5;
+                    p.userData.item.rotation.y += 0.02;
+                }
+                
+                // Анимация голограмм
+                if (p.userData.hologram) {
+                    p.userData.hologram.rotation.y += 0.01;
+                }
+                
+                // Анимация неоновых полос
+                if (p.userData.edges) {
+                    p.userData.edges.forEach(edge => {
+                        edge.material.emissiveIntensity = 0.5 + Math.sin(Date.now() * 0.002) * 0.5;
+                    });
+                }
+            });
+
             // Если активен чат, останавливаем физику
             if(document.activeElement === chatInput) {
                 // Не обновляем физику при активном чате
-            } else if (musicMenu.style.display !== 'block') {
+            } else if (musicMenu.style.display !== 'block' && settingsMenu.style.display !== 'block') {
                 let moveVector = new THREE.Vector3();
                 let baseSpeed;
                 if (isSprinting && canSprint) {
@@ -1671,7 +2336,10 @@
                     if(keys.ctrl) moveVector.y -= moveSpeed;
                     
                     let nextPos = cameraHolder.position.clone().add(moveVector);
-                    if (!checkCollision(nextPos)) cameraHolder.position.copy(nextPos);
+                    const collision = checkCollision(nextPos);
+                    if (!collision.collision) {
+                        cameraHolder.position.copy(nextPos);
+                    }
                 } else {
                     const forward = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
                     const right = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
@@ -1682,9 +2350,16 @@
                     if(keys.a) moveVector.addScaledVector(right, -moveSpeed);
 
                     let nextPos = cameraHolder.position.clone().add(moveVector);
-                    if(!checkCollision(new THREE.Vector3(nextPos.x, cameraHolder.position.y, nextPos.z))) {
+                    const collision = checkCollision(new THREE.Vector3(nextPos.x, cameraHolder.position.y, nextPos.z));
+                    
+                    if(!collision.collision) {
                         cameraHolder.position.x = nextPos.x;
                         cameraHolder.position.z = nextPos.z;
+                    }
+                    
+                    // Проверяем сбор предметов
+                    if (collision.item) {
+                        collectItem(collision.item, collision.platform);
                     }
                     
                     let gravity = 0.012 * fpsMult;
@@ -1727,7 +2402,7 @@
                         }
                     });
 
-                    if (onGround) jetpackFuel = Math.min(100, jetpackFuel + 0.5 * fpsMult);
+                    if (onGround) jetpackFuel = Math.min(fuelMax, jetpackFuel + 0.5 * fpsMult);
                     cameraHolder.position.y = nextY;
                 }
             }
@@ -1738,6 +2413,7 @@
                 wasInChat = false;
             }
             
+            // Интерполяция позиций других игроков
             for(let id in otherPlayers) {
                 otherPlayers[id].mesh.position.lerp(otherPlayers[id].targetPos, 0.2 * fpsMult);
                 if (otherPlayers[id].nickSprite) {
@@ -1745,31 +2421,26 @@
                 }
             }
             
-            platforms.forEach(p => {
-                if (p.userData.hologram) {
-                    p.userData.hologram.rotation.y += 0.01;
-                }
-                if (p.userData.edges) {
-                    p.userData.edges.forEach(edge => {
-                        edge.material.emissiveIntensity = 0.5 + Math.sin(Date.now() * 0.002) * 0.5;
-                    });
-                }
-            });
-
+            // Анимация звезд
             if (stars) {
                 stars.rotation.y += 0.00005;
             }
 
+            // Отправка позиции на сервер
             socket.emit('move', {
                 x: cameraHolder.position.x, 
                 y: cameraHolder.position.y, 
                 z: cameraHolder.position.z, 
                 nick: myNick
             });
+            
             renderer.render(scene, camera);
         }
-        animate();
+        
+        // Запускаем анимацию
+        requestAnimationFrame(animate);
 
+        // Обработка сообщений чата
         socket.on('receiveMessage', d => {
             const div = document.createElement('div');
             div.className = 'msg-line';
@@ -1788,6 +2459,7 @@
             m.scrollTop = m.scrollHeight;
         });
 
+        // Обработка изменения размера окна
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
